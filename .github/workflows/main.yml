@@ -1,34 +1,32 @@
-name: PVS-Studio build analysis
+name: PVS-Studio C# Analysis
+
 on: workflow_dispatch
+
 jobs:
-  build-analyze:
-    runs-on: ubuntu-latest
+  analyze:
+    runs-on: windows-latest
+
     steps:
-      - name: Check out repository code
+      - name: Checkout code
         uses: actions/checkout@v2
-      - name: Install tools
+
+      - name: Install PVS-Studio
         run: |
-          wget -q -O - https://files.pvs-studio.com/etc/pubkey.txt \
-            | sudo apt-key add -
-          sudo wget -O /etc/apt/sources.list.d/viva64.list \
-            https://files.pvs-studio.com/etc/viva64.list
-          sudo apt update
-          sudo apt install pvs-studio
-          pvs-studio-analyzer credentials ${{ secrets.PVS_STUDIO_CREDENTIALS }}
-      - name: Show folder structure
-        run: ls -R
-      - name: Build
+          choco install pvs-studio
+
+      - name: Activate license
         run: |
-          cmake -DCMAKE_EXPORT_COMPILE_COMMANDS=On -B build .
-          cmake --build build -j
-      - name: Analyze
+          & "C:\Program Files (x86)\PVS-Studio\PVS-Studio_Cmd.exe" Credentials ${{ secrets.PVS_STUDIO_CREDENTIALS }}
+
+      - name: Run PVS-Studio for C#
         run: |
-          pvs-studio-analyzer analyze -f build/compile_commands.json -j
-      - name: Convert report
+          & "C:\Program Files (x86)\PVS-Studio\PVS-Studio_Cmd.exe" -t cs -o PVS-Studio.log SharpNav.sln
+
+      - name: Convert to SARIF
         run: |
-          plog-converter -t sarif -o pvs-report.sarif PVS-Studio.log
-      - name: Publish report
+          & "C:\Program Files (x86)\PVS-Studio\plog-converter.exe" -t sarif -o pvs-report.sarif PVS-Studio.log
+
+      - name: Upload SARIF to GitHub
         uses: github/codeql-action/upload-sarif@v1
         with:
           sarif_file: pvs-report.sarif
-          category: PVS-Studio
