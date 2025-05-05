@@ -16,7 +16,7 @@ jobs:
 
       - name: Activate license
         run: |
-          & "C:\Program Files (x86)\PVS-Studio\PVS-Studio_Cmd.exe" Credentials ${{ secrets.PVS_STUDIO_CREDENTIALS }}
+          & "C:\Program Files (x86)\PVS-Studio\pvs-studio-cmd.exe" -i 14divko@mail.ru:FWD0-5XZB-2KPH-9X8F
 
       - name: Run PVS-Studio for C#
         run: |
